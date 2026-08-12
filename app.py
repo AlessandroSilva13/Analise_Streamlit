@@ -16,6 +16,8 @@ df = pd.read_excel(
 sheet_name=1
 )
 
+df_pax = pd.read_excel(2026 INDICADORES NPC DRE (Versão 1).xlsx,sheet_name=0)
+
 df.rename(columns={'VALOR BRUTO': 'Valor bruto'}, inplace=True)
 df_faturamento = df.dropna(axis=1, how= 'all')
 df_faturamento['Data'] = pd.to_datetime(dict(year=df_faturamento['ANO'], month=df_faturamento['COMPETÊNCIA'], day=1))
