@@ -3,6 +3,12 @@ import plotly.express as px
 import streamlit as st
 import datetime
 
+st.set_page_config(
+page_title="Dashboard de Financeiro", 
+layout="wide"
+)
+
+
 # Classificação de variáveis
 
 pd.options.display.float_format = '{:.2f}'.format
@@ -31,7 +37,7 @@ mapa_cores_procedimento = {
         'Psicopedagogia': '#ff2b2b',
         'Fonoaudiologia': '#0068c9',
         'Psicologia': '#29b09d',
-        'Terapia_Ocupacional': '#7defa1'
+        'Terapia Ocupacional': '#7defa1'
 }
 
 #Meses pacientes
@@ -123,11 +129,6 @@ df_unimed_proc = df_unimed_proc[['MES_ANO', 'Código', 'Procedimento', 'Quantida
 df_unimed_proc = df_unimed_proc.groupby(['MES_ANO', 'Procedimento'], as_index=False)['Quantidade'].sum()
 df_pizza = df_unimed_proc.groupby('Procedimento', as_index=False)['Quantidade'].sum()
 df_pizza_consolidado = df_unimed_proc.groupby('Procedimento', as_index=False)['Quantidade'].sum()
-
-st.set_page_config(
-page_title="Dashboard de Financeiro", 
-layout="wide"
-)
 
 #Criação de Figuras Faturamento
 
@@ -236,6 +237,7 @@ fig7 = px.pie(
         df_pizza,
         names='Procedimento',
         values='Quantidade',
+        color='Procedimento',
         color_discrete_map=mapa_cores_procedimento,
         title='Distribuição total de Procedimentos da Unimed',
         hole=0.3,
