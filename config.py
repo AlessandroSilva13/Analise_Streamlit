@@ -1,10 +1,8 @@
-# URLs e Caminhos de Arquivo
 URL_FATURAMENTO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcbATCsLy6oktlxeb6R73G1OYH27bgDnI5LeB9W4j_oQYzYgFW14e5CxxUbr9pkeAN6Ha-EWZXiva4/pub?output=xlsx'
 URL_INDICADORES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqYJM9K_40RztaYJc8lfd_gZ8_jdk9sDizv0CvBxw8p6JIaNiMPi-KHvNCVotdSsaAEL0CRTAHtnqn/pub?output=xlsx'
 URL_UNIMED = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpGI4bTlbNcxr7txXQy4wj7VaBj0yrqLC4SlgbnegWhR8qGBSxmDHE6KSylVOq9Q/pub?output=xlsx'
 PATH_PROFISSIONAIS = 'C:/Dev/ALEX.PY/Python_para_MF/Projeto_Estudando/Estudando_Bibliotecas/Analise_Streamlit/Resultado_Com_Faturamento.xlsx'
 
-# Dicionários de Mapeamento
 MAPEAMENTO_PROCEDIMENTOS = {
     2010368: 'Fisioterapia',
     5000001: 'Psicomotricidade',
@@ -18,7 +16,6 @@ MAPEAMENTO_PROCEDIMENTOS = {
     5000517: 'Terapia Ocupacional',
 }
 
-# Cores
 COR_VERDE_ESCURO = '#1aad95'
 COR_VERDE_CLARO = "#76dba9"
 COR_BRANCO = '#ffffff'

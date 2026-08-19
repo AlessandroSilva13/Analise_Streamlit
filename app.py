@@ -7,7 +7,6 @@ import data_loader
 import data_processor
 import plots
 
-# --- Configurações Básicas ---
 st.set_page_config(page_title="Dashboard de Financeiro", layout="wide")
 pd.options.display.float_format = '{:.2f}'.format
 
@@ -34,10 +33,10 @@ with st.sidebar:
     with col_fim:
         data_fim = st.date_input('Data final', value=datetime.date(2028, 12, 31))
     
-    # Converter para datetime para o pandas
+# Converter para datetime para o pandas
     dt_inicio = pd.to_datetime(data_inicio)
     dt_fim = pd.to_datetime(data_fim)
-    
+
     Dados = st.sidebar.radio('Selecione a análise', ('Faturamento', 'Profissionais'))
 
 # --- Carregamento de Dados ---
@@ -46,7 +45,7 @@ df_unimed_raw = data_loader.carregar_dados_unimed(config.URL_UNIMED)
 df_ind_raw = data_loader.carregar_dados_indicadores(config.URL_INDICADORES)
 df_prof_raw = data_loader.carregar_dados_profissionais(config.PATH_PROFISSIONAIS)
 
-# Processamento base (feito independente das datas)
+# Processamento base
 df_faturamento = data_processor.processar_faturamento_base(df_fat_raw)
 df_unimed = data_processor.processar_unimed_base(df_unimed_raw)
 
@@ -66,7 +65,7 @@ if Dados == 'Faturamento':
         fig6 = plots.plot_procedimentos_mes(df_proc_barras)
         fig7 = plots.plot_procedimentos_pizza(df_proc_pizza)
 
-# Exibir (Layout)
+
         c1, c2, c3 = st.columns(3)
         c1.plotly_chart(fig1, use_container_width=True)
         c2.plotly_chart(fig2, use_container_width=True)

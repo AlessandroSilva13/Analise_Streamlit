@@ -32,7 +32,7 @@ def obter_dados_faturamento(df_faturamento, dt_inicio, dt_fim):
     return df_evolucao, df_evolucao_outros, df_evolucao_unimed
 
 def obter_dados_indicadores(df_indicadores):
-    meses = df_indicadores.columns[:-1] # exclui 'Total' se houver
+    meses = df_indicadores.columns[:-1]
     
     # Pacientes totais (Fig4)
     totais = pd.to_numeric(df_indicadores.loc["Quant. de pacientes NPC", meses], errors='coerce').dropna()
