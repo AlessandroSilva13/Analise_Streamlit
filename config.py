@@ -3,7 +3,7 @@ import streamlit as st
 URL_FATURAMENTO = st.secrets["url_faturamento"]
 URL_INDICADORES = st.secrets["url_indicadores"]
 URL_UNIMED = st.secrets["url_unimed"]
-PATH_PROFISSIONAIS = 'C:/Dev/ALEX.PY/Python_para_MF/Projeto_Estudando/Estudando_Bibliotecas/Analise_Streamlit/Resultado_Com_Faturamento.xlsx'
+PATH_PROFISSIONAIS = 'Resultado_Com_Faturamento.xlsx'
 
 MAPEAMENTO_PROCEDIMENTOS = {
     2010368: 'Fisioterapia',
