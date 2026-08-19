@@ -18,15 +18,34 @@ MAPEAMENTO_PROCEDIMENTOS = {
     5000517: 'Terapia Ocupacional',
 }
 
+# --- CORES FIXAS (INTACTAS) ---
 COR_VERDE_ESCURO = '#1aad95'
 COR_VERDE_CLARO = "#76dba9"
 COR_BRANCO = '#ffffff'
 
+# --- CORES DOS PROCEDIMENTOS (Tons Pastéis) ---
 MAPA_CORES_PROCEDIMENTO = {
-    'Fisioterapia': '#83c9ff',
-    'Psicomotricidade': '#ffabab',
-    'Psicopedagogia': '#ff2b2b',
-    'Fonoaudiologia': '#0068c9',
-    'Psicologia': '#29b09d',
-    'Terapia Ocupacional': '#7defa1'
+    'Fisioterapia': '#a1c9f4',        
+    'Psicomotricidade': '#b2dfdb',    
+    'Psicopedagogia': '#c8e6c9',     
+    'Fonoaudiologia': '#90caf9',      
+    'Psicologia': '#80cbc4',          
+    'Terapia Ocupacional': '#e0f2f1' 
+}
+
+# --- CORES DAS OPERADORAS ---
+MAPA_CORES_OPERADORAS = {
+    'Unimed Fortaleza': COR_VERDE_ESCURO,  
+    'Unimed Ceará': '#4db6ac',           
+    'Unimed Florianópolis': "#5ed263",     
+    'Unimed Natal': "#7cad44",            
+    'Unimed Belém': "#acff4e",             
+    'Unimed Fesp': "#5dae00",            
+    'Central Nacional': "#41ff8d",        
+    'Particular': "#00752f",               
+    'Assefaz - Ceara': "#0769ea",         
+    'Fusex': "#0a6793",                    
+    'Marinha': '#29b6f6',                  
+    'Camed': "#00e1ff",                    
+    'Casembrapa': "#006d7c"              
 }

@@ -25,6 +25,11 @@ with st.sidebar:
     st.write("Use esta área para visualizar a base de dados.")
     if st.button('🔄 Atualizar dados'):
         st.cache_data.clear() # Limpa o cache se o usuário pedir
+    st.header("Unidade")
+    unidade_selecionada = st.selectbox(
+                            'Selecione a Unidade',
+                            ['Todas', 'MATRIZ', 'LIFE', 'SUL']
+)
     
     st.header("Período")
     col_inicio, col_fim = st.columns(2)
@@ -52,7 +57,7 @@ df_unimed = data_processor.processar_unimed_base(df_unimed_raw)
 # --- Renderização da Interface ---
 if Dados == 'Faturamento':
 # Obter dados filtrados
-        df_evo, df_evo_outros, df_evo_unimed = data_processor.obter_dados_faturamento(df_faturamento, dt_inicio, dt_fim)
+        df_evo, df_evo_outros, df_evo_unimed = data_processor.obter_dados_faturamento(df_faturamento, dt_inicio, dt_fim, unidade_selecionada)
         df_fig4, dados_julho = data_processor.obter_dados_indicadores(df_ind_raw)
         df_proc_barras, df_proc_pizza = data_processor.obter_dados_procedimentos(df_unimed)
         
