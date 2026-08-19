@@ -1,278 +1,91 @@
-import pandas as pd
-import plotly.express as px
 import streamlit as st
+import pandas as pd
 import datetime
 
-st.set_page_config(
-page_title="Dashboard de Financeiro", 
-layout="wide"
-)
+import config
+import data_loader
+import data_processor
+import plots
 
-
-# Classificação de variáveis
-
+# --- Configurações Básicas ---
+st.set_page_config(page_title="Dashboard de Financeiro", layout="wide")
 pd.options.display.float_format = '{:.2f}'.format
 
-#Procedimentos 
-mapeamento_procedimentos = {
-        2010368: 'Fisioterapia',
-        5000001: 'Psicomotricidade',
-        5000050: 'Psicopedagogia',
-        5000518: 'Fonoaudiologia',
-        5000061: 'Fonoaudiologia',
-        5000510: 'Psicologia',
-        5000047: 'Psicologia',
-        5000046: 'Psicologia',
-        5000008: 'Terapia Ocupacional',
-        5000517: 'Terapia Ocupacional',
-}
-#Cores
-cor_verde_escuro = '#1aad95'
-cor_verde_claro = "#76dba9"
-cor_branco = '#ffffff'
-
-mapa_cores_procedimento = {
-        'Fisioterapia': '#83c9ff',
-        'Psicomotricidade': '#ffabab',
-        'Psicopedagogia': '#ff2b2b',
-        'Fonoaudiologia': '#0068c9',
-        'Psicologia': '#29b09d',
-        'Terapia Ocupacional': '#7defa1'
-}
-
-#Meses pacientes
-meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-
-# Importação de dados
-df = pd.read_excel(
-'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcbATCsLy6oktlxeb6R73G1OYH27bgDnI5LeB9W4j_oQYzYgFW14e5CxxUbr9pkeAN6Ha-EWZXiva4/pub?output=xlsx',
-sheet_name=1
-)
-df_unimed = pd.read_excel('UNIMED_CONSOLIDADO_DATADO.xlsx', header = 3)
-df_indicadores = pd.read_excel('2026 INDICADORES NPC DRE (Versão 1).xlsx',
-                        sheet_name='OKRs Consolidados', 
-                        skiprows=36,
-                        nrows=10,
-                        usecols='A:N',
-                        index_col=0
-)
-
-df.rename(columns={'VALOR BRUTO': 'Valor bruto'}, inplace=True)
-df_faturamento = df.dropna(axis=1, how= 'all')
-df_faturamento['Data'] = pd.to_datetime(dict(year=df_faturamento['ANO'], month=df_faturamento['COMPETÊNCIA'], day=1))
-df_filtro= df_faturamento[df_faturamento['SITUAÇÃO'] != 'CANCELADA']
-df_evolucao = df_filtro.groupby(['ANO', 'COMPETÊNCIA'])[['Valor bruto','Valor líquido']].sum().reset_index()
-df_evolucao['Data'] = pd.to_datetime(dict(year=df_evolucao['ANO'], month=df_evolucao['COMPETÊNCIA'], day=1))
-
-
-df_unimed['Código'] = pd.to_numeric(df_unimed['Código'], errors='coerce').astype('Int64')
-df_unimed['MES_ANO'] = pd.to_datetime(df_unimed['MES_ANO'])
-
-st.header('Relatório Financeiro NPC')
-st.caption('Relatório feito com dados de 2024 a 2026')
+# --- Header ---
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.header('Relatório Financeiro NPC')
+    st.caption('Relatório feito com dados de 2024 a 2026')
+with col2:
+    st.image('imagens/NPC.jpg', width=120)
 st.divider()
 
+# --- Sidebar ---
 with st.sidebar:
-        st.header("Dados")
-        st.write("Use esta área para vizualizar a base de dados.")
-        atualizacao = st.sidebar.button('🔄 Atualizar dados')
+    st.header("Dados")
+    st.write("Use esta área para visualizar a base de dados.")
+    if st.button('🔄 Atualizar dados'):
+        st.cache_data.clear() # Limpa o cache se o usuário pedir
+    
+    st.header("Período")
+    col_inicio, col_fim = st.columns(2)
+    with col_inicio:
+        data_inicio = st.date_input('Data inicial', value=datetime.date(2024, 1, 1))
+    with col_fim:
+        data_fim = st.date_input('Data final', value=datetime.date(2028, 12, 31))
+    
+    # Converter para datetime para o pandas
+    dt_inicio = pd.to_datetime(data_inicio)
+    dt_fim = pd.to_datetime(data_fim)
+    
+    Dados = st.sidebar.radio('Selecione a análise', ('Faturamento', 'Profissionais'))
 
-with st.sidebar:
-        st.header("Periodo")
-        col_inicio, col_fim= st.columns(2)
-with col_inicio:
-        data_inicio = st.date_input(
-        label='Data inicial',
-        value=datetime.date(2024,1,1))
-with col_fim:
-                data_fim = st.date_input(
-                label='Data final',
-                value=datetime.date(2028,12,31)
-                )
-# Dados Fig1
-data_inicio = pd.to_datetime(data_inicio)
-data_fim = pd.to_datetime(data_fim)
-mascara1 = (df_evolucao['Data'] >= data_inicio) & (df_evolucao['Data'] <= data_fim)
-df_evolucao_filtrado = df_evolucao.loc[mascara1]
+# --- Carregamento de Dados ---
+df_fat_raw = data_loader.carregar_dados_faturamento(config.URL_FATURAMENTO)
+df_unimed_raw = data_loader.carregar_dados_unimed(config.URL_UNIMED)
+df_ind_raw = data_loader.carregar_dados_indicadores(config.URL_INDICADORES)
+df_prof_raw = data_loader.carregar_dados_profissionais(config.PATH_PROFISSIONAIS)
 
-# Dados Fig2
-df_filtro2= df_faturamento[df_faturamento['OPERADORA'] != 'Unimed Fortaleza']
-df_evolucao_filtro = df_filtro2.groupby(['ANO', 'COMPETÊNCIA','OPERADORA'])[['Valor bruto','Valor líquido']].sum().reset_index()
-df_evolucao_filtro['Data'] = pd.to_datetime(dict(year=df_evolucao_filtro['ANO'], month=df_evolucao_filtro['COMPETÊNCIA'], day=1))
-mascara2 = (df_evolucao_filtro['Data'] >= data_inicio) & (df_evolucao_filtro['Data'] <= data_fim)
-df_evolucao_filtro_por_data = df_evolucao_filtro.loc[mascara2]
+# Processamento base (feito independente das datas)
+df_faturamento = data_processor.processar_faturamento_base(df_fat_raw)
+df_unimed = data_processor.processar_unimed_base(df_unimed_raw)
 
-# Dados Fig3
-df_filtro3= df_faturamento[df_faturamento['OPERADORA'] == 'Unimed Fortaleza']
-df_evolucao_unimed = df_filtro3.groupby(['ANO', 'COMPETÊNCIA','OPERADORA'])[['Valor bruto','Valor líquido']].sum().reset_index()
-df_evolucao_unimed['Data'] = pd.to_datetime(dict(year=df_evolucao_unimed['ANO'], month=df_evolucao_unimed['COMPETÊNCIA'], day=1))
-mascara3 = (df_evolucao_unimed['Data'] >= data_inicio) & (df_evolucao_unimed['Data'] <= data_fim)
-df_evolucao_unimed_por_data = df_evolucao_unimed.loc[mascara3]
-
-# Dados Fig4
-totais_mensais = df_indicadores.loc['Quant. de pacientes NPC', meses]
-totais_mensais = pd.to_numeric(totais_mensais, errors='coerce')
-totais_mensais = totais_mensais.dropna()
-
-# Dados Fig5
-linhas_para_remover = ['Quant. de pacientes NPC']
-df_planos = df_indicadores.drop(linhas_para_remover, errors='ignore')
-dados_junho = df_planos['Jun']
-dados_junho = pd.to_numeric(dados_junho, errors='coerce').dropna()
-dados_junho = dados_junho[dados_junho > 0]
-
-# Dados Fig6 & Fig7
-df_unimed_proc = df_unimed.groupby(['MES_ANO', 'Código']).size().reset_index(name='Quantidade')
-df_unimed_proc['Procedimento'] = df_unimed_proc['Código'].map(mapeamento_procedimentos)
-df_unimed_proc['Procedimento'] = df_unimed_proc['Procedimento'].fillna('Outros/Não Mapeado')
-df_unimed_proc = df_unimed_proc[['MES_ANO', 'Código', 'Procedimento', 'Quantidade']]
-df_unimed_proc = df_unimed_proc.groupby(['MES_ANO', 'Procedimento'], as_index=False)['Quantidade'].sum()
-df_pizza = df_unimed_proc.groupby('Procedimento', as_index=False)['Quantidade'].sum()
-df_pizza_consolidado = df_unimed_proc.groupby('Procedimento', as_index=False)['Quantidade'].sum()
-
-#Criação de Figuras Faturamento
-
-fig1 = px.bar(df_evolucao_filtrado,
-        x='Data',
-        y=['Valor bruto','Valor líquido'],
-        title= 'Evolução do Faturamento',
-        barmode='group',
-        opacity=1,
-        color_discrete_sequence=[cor_verde_escuro, cor_verde_claro]
-)
-fig1.update_layout(
-xaxis_title='Data',
-yaxis_title='Valores',
-plot_bgcolor='white',
-legend_title_text='Definição de valores'
-)
-
-fig1.update_traces(
-textposition='inside',
-textfont_size=10
-)
-
-fig2 = px.bar(df_evolucao_filtro_por_data,
-        x='Data',
-        y=['Valor bruto'],
-        title= 'Evolução do Faturamento - Outros Planos',
-        color='OPERADORA',
-)
-fig2.update_layout(
-xaxis_title='Data',
-yaxis_title='Valor bruto',
-plot_bgcolor='white',
-legend_title_text='Operadoras'
-)
-
-fig2.update_traces(
-textposition='inside',
-textfont_size=10
-)
-
-fig3 = px.bar(df_evolucao_unimed_por_data,
-        x='Data',
-        y=['Valor bruto','Valor líquido'],
-        title= 'Evolução do Faturamento - Unimed',
-        barmode='overlay',
-        opacity=1,
-        color_discrete_sequence= [cor_verde_escuro, cor_verde_claro]
-)
-fig3.update_layout(
-xaxis_title='Data',
-yaxis_title='Valores',
-plot_bgcolor='white',
-legend_title_text='Definição de valores'
-)
-
-fig3.update_traces(
-textposition='inside',
-textfont_size=10
-)
-
-fig4 = px.bar(
-        x=totais_mensais.index,     
-        y=totais_mensais.values,      
-        title='Evolução Mensal - Total de Pacientes',
-        labels={'x': 'Meses', 'y': 'Quantidade de Pacientes'},
-        text_auto=True,
-        color_discrete_sequence=[cor_verde_claro]              
-)
-
-fig5 = px.pie(
-        names=dados_junho.index,
-        values=dados_junho.values,
-        title='Distribuição de Pacientes por Convênio (Exceto Unimed Fortaleza) - Junho',
-        hole=0.3,
-        color_discrete_map=mapa_cores_procedimento
-)
-fig5.update_traces(
-        textposition='inside',
-        textinfo='percent+label'
-)
-
-fig6 = px.bar(
-        df_unimed_proc,
-        x='MES_ANO',
-        y='Quantidade',
-        color='Procedimento',
-        color_discrete_map=mapa_cores_procedimento,
-        title='Procedimentos por Mês - Unimed',
-        barmode='stack',
-        text_auto=True
-)
-fig6.update_layout(
-xaxis_title='Mês / Ano',
-yaxis_title='Quantidade',
-plot_bgcolor='white',
-legend_title_text='Procedimento'
-)
-
-fig6.update_traces(
-textposition='inside',
-textfont_size=10
-)
-
-fig7 = px.pie(
-        df_pizza,
-        names='Procedimento',
-        values='Quantidade',
-        color='Procedimento',
-        color_discrete_map=mapa_cores_procedimento,
-        title='Distribuição total de Procedimentos da Unimed',
-        hole=0.3,
-)
-fig7.update_traces(
-        textposition='inside',
-        textinfo='percent+label'
-)
-fig7.update_layout(legend={'traceorder':'normal'})
-
-Dados = st.sidebar.radio(
-        'Selecione os dados a serem analisados',
-        ('Faturamento','Profissionais')
-)
+# --- Renderização da Interface ---
 if Dados == 'Faturamento':
-        col1, col2, col3 = st.columns(3)
-        with col1:
-                st.plotly_chart(fig1, use_container_width=True)
-        with col2:
-                st.plotly_chart(fig2, use_container_width=True)
-        with col3:
-                st.plotly_chart(fig3, use_container_width=True)
+# Obter dados filtrados
+        df_evo, df_evo_outros, df_evo_unimed = data_processor.obter_dados_faturamento(df_faturamento, dt_inicio, dt_fim)
+        df_fig4, dados_julho = data_processor.obter_dados_indicadores(df_ind_raw)
+        df_proc_barras, df_proc_pizza = data_processor.obter_dados_procedimentos(df_unimed)
+        
+# Criar Gráficos
+        fig1 = plots.plot_evolucao_geral(df_evo)
+        fig2 = plots.plot_evolucao_outros(df_evo_outros)
+        fig3 = plots.plot_evolucao_unimed(df_evo_unimed)
+        fig4 = plots.plot_pacientes_mes(df_fig4)
+        fig5 = plots.plot_distribuicao_julho(dados_julho)
+        fig6 = plots.plot_procedimentos_mes(df_proc_barras)
+        fig7 = plots.plot_procedimentos_pizza(df_proc_pizza)
 
-        col4, col5 = st.columns(2)
-        with col4:
-                st.plotly_chart(fig4, use_container_width=True)
-        with col5:
-                st.plotly_chart(fig5, use_container_width=True)
+# Exibir (Layout)
+        c1, c2, c3 = st.columns(3)
+        c1.plotly_chart(fig1, use_container_width=True)
+        c2.plotly_chart(fig2, use_container_width=True)
+        c3.plotly_chart(fig3, use_container_width=True)
 
-        col6, col7, = st.columns(2)
-        with col6:
-                st.plotly_chart(fig6, use_container_width=True)
-        with col7:
-                st.plotly_chart(fig7, use_container_width=True)
+        c4, c5 = st.columns(2)
+        c4.plotly_chart(fig4, use_container_width=True)
+        c5.plotly_chart(fig5, use_container_width=True)
+
+        c6, c7 = st.columns(2)
+        c6.plotly_chart(fig6, use_container_width=True)
+        c7.plotly_chart(fig7, use_container_width=True)
 
 elif Dados == 'Profissionais':
-        st.info('Módulo de Profissionais em construção...')
-
+        df_vinculo, df_reasons = data_processor.obter_dados_profissionais(df_prof_raw, dt_inicio, dt_fim)
+        
+        figP1 = plots.plot_profissionais_vinculo(df_vinculo)
+        figP2 = plots.plot_profissionais_reason(df_reasons)
+        
+        cP1, cP2 = st.columns(2)
+        cP1.plotly_chart(figP1, use_container_width=True)
+        cP2.plotly_chart(figP2, use_container_width=True)
