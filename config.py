@@ -25,12 +25,12 @@ COR_BRANCO = '#ffffff'
 
 # --- CORES DOS PROCEDIMENTOS (Tons Pastéis) ---
 MAPA_CORES_PROCEDIMENTO = {
-    'Fisioterapia': '#a1c9f4',        
-    'Psicomotricidade': '#b2dfdb',    
+    'Fisioterapia': '#006d7c',        
+    'Psicomotricidade': '#4db6ac',    
     'Psicopedagogia': '#c8e6c9',     
-    'Fonoaudiologia': '#90caf9',      
-    'Psicologia': '#80cbc4',          
-    'Terapia Ocupacional': '#e0f2f1' 
+    'Fonoaudiologia': '#7cad44',      
+    'Psicologia': '#00752f',          
+    'Terapia Ocupacional': COR_VERDE_ESCURO 
 }
 
 # --- CORES DAS OPERADORAS ---
@@ -48,4 +48,11 @@ MAPA_CORES_OPERADORAS = {
     'Marinha': '#29b6f6',                  
     'Camed': "#00e1ff",                    
     'Casembrapa': "#006d7c"              
+}
+
+# --- MESES DOS PACIENTES ---
+MESES_PT = {
+    'Jan': 1, 'Fev': 2, 'Mar': 3, 'Abr': 4,
+    'Mai': 5, 'Jun': 6, 'Jul': 7, 'Ago': 8,
+    'Set': 9, 'Out': 10, 'Nov': 11, 'Dez': 12
 }

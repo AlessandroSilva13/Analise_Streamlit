@@ -1,37 +1,51 @@
 import plotly.express as px
 from config import COR_VERDE_ESCURO, COR_VERDE_CLARO, MAPA_CORES_PROCEDIMENTO, MAPA_CORES_OPERADORAS
 
-def plot_evolucao_geral(df):
-    fig = px.bar(df, x='Data', y=['Valor bruto','Valor líquido'], title='Evolução do Faturamento', 
-                barmode='group', color_discrete_sequence=[COR_VERDE_ESCURO, COR_VERDE_CLARO])
-    fig.update_layout(xaxis_title='Data', yaxis_title='Valores', plot_bgcolor='white', legend_title_text='Valores')
-    return fig
-
-def plot_evolucao_outros(df):
+def plot_evolucao_por_operadora(df_evolucao_operadoras):
+    ordem_operadoras = (
+        df_evolucao_operadoras.groupby('OPERADORA')['Valor bruto']
+        .sum()
+        .sort_values(ascending=False)
+        .index.tolist()
+    )
     fig = px.bar(
-        df, 
-        x='Data', 
-        y='Valor bruto', 
-        color='OPERADORA',  # <-- Linha essencial
-        title='Faturamento - Outros Planos', 
-        color_discrete_map=MAPA_CORES_OPERADORAS
+        df_evolucao_operadoras,
+        x='Data',
+        y='Valor bruto',
+        color='OPERADORA',  # Isso que separa as cores
+        title='Evolução do Faturamento por Operadora',
+        color_discrete_map=MAPA_CORES_OPERADORAS,
+        barmode='stack',
+        category_orders={'OPERADORA': ordem_operadoras}# Isso que empilha as barras
     )
     
     fig.update_layout(
-        xaxis_title='Data',
+        xaxis_title='', 
         yaxis_title='Valor Bruto (R$)', 
-        plot_bgcolor='white',
-        barmode='stack',
+        plot_bgcolor='white', 
         legend_title_text='Operadora'
     )
     
     return fig
 
-def plot_evolucao_unimed(df):
-    fig = px.bar(df, x='Data', y=['Valor bruto','Valor líquido'], title='Faturamento - Unimed', 
-                barmode='group', color_discrete_sequence=[COR_VERDE_ESCURO, COR_VERDE_CLARO])
-    fig.update_layout(plot_bgcolor='white')
-    fig.update_traces(opacity=1)
+def plot_pizza_outros(df):
+    df_agregado = df.groupby('OPERADORA', as_index=False)['Valor bruto'].sum()
+    
+    fig = px.pie(
+        df_agregado,
+        values='Valor bruto',
+        names='OPERADORA',
+        title='Faturamento - Distribuição do Período',
+        color='OPERADORA',
+        color_discrete_map=MAPA_CORES_OPERADORAS,
+        hole=0.3  
+    )
+    
+    fig.update_traces(
+        textposition='inside', 
+        textinfo='percent+label'
+    )
+    
     return fig
 
 def plot_pacientes_mes(df):
@@ -44,7 +58,7 @@ def plot_distribuicao_julho(dados_julho):
         values=dados_julho.values,
         color=dados_julho.index, 
         hole=0.3, 
-        title='Distribuição de Pacientes - Julho', 
+        title='Distribuição Média de Pacientes no Período', 
         color_discrete_map=MAPA_CORES_OPERADORAS
     )
     fig.update_traces(textposition='inside', textinfo='percent+label')

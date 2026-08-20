@@ -57,24 +57,21 @@ df_unimed = data_processor.processar_unimed_base(df_unimed_raw)
 # --- Renderização da Interface ---
 if Dados == 'Faturamento':
 # Obter dados filtrados
-        df_evo, df_evo_outros, df_evo_unimed = data_processor.obter_dados_faturamento(df_faturamento, dt_inicio, dt_fim, unidade_selecionada)
-        df_fig4, dados_julho = data_processor.obter_dados_indicadores(df_ind_raw)
+        df_evo, df_evolucao_operadoras = data_processor.obter_dados_faturamento(df_faturamento, dt_inicio, dt_fim, unidade_selecionada)
+        df_fig4, dados_julho = data_processor.obter_dados_indicadores(df_ind_raw, dt_inicio, dt_fim)
         df_proc_barras, df_proc_pizza = data_processor.obter_dados_procedimentos(df_unimed)
         
 # Criar Gráficos
-        fig1 = plots.plot_evolucao_geral(df_evo)
-        fig2 = plots.plot_evolucao_outros(df_evo_outros)
-        fig3 = plots.plot_evolucao_unimed(df_evo_unimed)
+        fig1 = plots.plot_evolucao_por_operadora(df_evolucao_operadoras)
+        fig2 = plots.plot_pizza_outros(df_evolucao_operadoras)
         fig4 = plots.plot_pacientes_mes(df_fig4)
         fig5 = plots.plot_distribuicao_julho(dados_julho)
         fig6 = plots.plot_procedimentos_mes(df_proc_barras)
         fig7 = plots.plot_procedimentos_pizza(df_proc_pizza)
 
-
-        c1, c2, c3 = st.columns(3)
+        c1, c2 = st.columns(2)
         c1.plotly_chart(fig1, use_container_width=True)
         c2.plotly_chart(fig2, use_container_width=True)
-        c3.plotly_chart(fig3, use_container_width=True)
 
         c4, c5 = st.columns(2)
         c4.plotly_chart(fig4, use_container_width=True)

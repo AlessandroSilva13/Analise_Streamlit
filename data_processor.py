@@ -1,5 +1,6 @@
 import pandas as pd
 from config import MAPEAMENTO_PROCEDIMENTOS
+from config import MESES_PT
 
 def processar_faturamento_base(df_fat):
     df_fat.rename(columns={'VALOR BRUTO': 'Valor bruto', 'EMPRESA':'Unidade_Padrao'}, inplace=True)
@@ -13,43 +14,55 @@ def processar_unimed_base(df_unimed):
     df_unimed.rename(columns={'Unidade':'Unidade_Padrao'}, inplace=True)
     return df_unimed
 
-# --- Funções para gerar os dados dos gráficos baseados nas datas ---
 
-def obter_dados_faturamento(df_faturamento, dt_inicio, dt_fim, unidade):
+def obter_dados_faturamento(df_faturamento, dt_inicio, dt_fim, unidade): 
     mascara = (df_faturamento['Data'] >= dt_inicio) & (df_faturamento['Data'] <= dt_fim)
     df_filtrado = df_faturamento.loc[mascara]
+    
     if unidade != 'Todas':
         df_filtrado = df_filtrado[df_filtrado['Unidade_Padrao'] == unidade]
     
-    # Geral
+    # DataFrame para gráficos gerais (se ainda usar)
     df_evolucao = df_filtrado.groupby(['Data'])[['Valor bruto','Valor líquido']].sum().reset_index()
     
-    # Outros Planos
-    df_outros = df_filtrado[df_filtrado['OPERADORA'] != 'Unimed Fortaleza']
-    df_evolucao_outros = df_outros.groupby(['Data', 'OPERADORA'])[['Valor bruto']].sum().reset_index()
+    # DataFrame específico para o seu gráfico empilhado com todas as operadoras
+    df_evolucao_operadoras = df_filtrado.groupby(['Data', 'OPERADORA'])[['Valor bruto']].sum().reset_index() 
     
-    # Unimed
-    df_unimed_fat = df_filtrado[df_filtrado['OPERADORA'] == 'Unimed Fortaleza']
-    df_unimed_fat.rename(index={'Unimed Florianópolis ': 'Unimed Florianópolis'}, inplace=True)
-    df_evolucao_unimed = df_unimed_fat.groupby(['Data', 'OPERADORA'])[['Valor bruto','Valor líquido']].sum().reset_index()
-    
-    return df_evolucao, df_evolucao_outros, df_evolucao_unimed
+    return df_evolucao, df_evolucao_operadoras
 
-def obter_dados_indicadores(df_indicadores):
+def mes_para_data(mes_abrev, ano):
+    """Converte 'Jul' -> Timestamp(ano, 7, 1)"""
+    return pd.Timestamp(year=ano, month=MESES_PT[mes_abrev], day=1)
+
+def obter_dados_indicadores(df_indicadores, dt_inicio, dt_fim):
+    ano = dt_inicio.year
     meses = df_indicadores.columns[:-1]
     
-    # Pacientes totais (Fig4)
-    totais = pd.to_numeric(df_indicadores.loc["Quant. de pacientes NPC", meses], errors='coerce').dropna()
+    mapa_datas = {m: mes_para_data(m, ano) for m in meses if m in MESES_PT}
+    meses_filtrados = [m for m, data in mapa_datas.items() if dt_inicio <= data <= dt_fim]
+    
+    if not meses_filtrados:
+        return pd.DataFrame(columns=['Meses', 'Quantidade']), pd.Series(dtype=float)
+    
+    # --- Pacientes totais (Fig4) ---
+    totais = pd.to_numeric(df_indicadores.loc["Quant. de pacientes NPC", meses_filtrados], errors='coerce').dropna()
     df_fig4 = totais.reset_index()
     df_fig4.columns = ['Meses', 'Quantidade']
     
-    # Pacientes Julho (Fig5)
+    # --- Pacientes de TODO o período filtrado (Fig5) ---
     df_planos = df_indicadores.drop(['Quant. de pacientes NPC'], errors='ignore')
     df_planos.rename(index={'Unimed Central Nacional': 'Central Nacional'}, inplace=True)
-    dados_julho = pd.to_numeric(df_planos['Jul'], errors='coerce').dropna()
-    dados_julho = dados_julho[dados_julho > 0]
     
-    return df_fig4, dados_julho
+    # 1. Isola apenas as colunas dos meses selecionados e garante que são números
+    df_planos_selecionados = df_planos[meses_filtrados].apply(pd.to_numeric, errors='coerce')
+    
+    # 2. Soma a linha inteira (todos os meses) para cada operadora
+    dados_periodo = df_planos_selecionados.mean(axis=1).dropna()
+    
+    # 3. Mantém apenas quem teve mais de zero pacientes no período
+    dados_periodo = dados_periodo[dados_periodo > 0]
+    
+    return df_fig4, dados_periodo
 
 def obter_dados_procedimentos(df_unimed):
     df_proc = df_unimed.groupby(['MES_ANO', 'Código']).size().reset_index(name='Quantidade')
